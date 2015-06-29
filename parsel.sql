@@ -1,8 +1,3 @@
-/* ========================================================================= */
-/* This work is derived from mjgleaso's gist at                              */
-/* https://gist.github.com/mjgleaso/8031067 , last accessed on 29/06/2015.   */
-/* ========================================================================= */
-
 DROP FUNCTION IF EXISTS parsel(db text, table_to_chunk text, pkey text, query text, output_table text, table_to_chunk_alias text, num_chunks integer);
 
 CREATE OR REPLACE FUNCTION parsel (
