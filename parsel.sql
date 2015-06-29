@@ -1,9 +1,8 @@
-DROP FUNCTION IF EXISTS parsel(db TEXT, table_to_chunk TEXT, pkey TEXT, query TEXT, output_table TEXT, table_to_chunk_alias TEXT, num_chunks INTEGER);
+DROP FUNCTION IF EXISTS parsel(db TEXT, table_to_chunk TEXT, query TEXT, output_table TEXT, table_to_chunk_alias TEXT, num_chunks INTEGER);
 
 CREATE OR REPLACE FUNCTION parsel (
 		db                   TEXT,
 		table_to_chunk       TEXT,
-		pkey                 TEXT,
 		query                TEXT,
 		output_table         TEXT,
 		table_to_chunk_alias TEXT DEFAULT '',
@@ -14,11 +13,8 @@ CREATE OR REPLACE FUNCTION parsel (
 $BODY$
 DECLARE
 	sql             TEXT;
-	min_id          INTEGER;
-	max_id          INTEGER;
+	no_of_records   INTEGER;
 	step_size       INTEGER;
-	lbnd            INTEGER;
-	ubnd            INTEGER;
 	subquery        TEXT;
 	insert_query    TEXT;
 	i               INTEGER;
@@ -33,34 +29,26 @@ DECLARE
 
 BEGIN
 
-	--find minimum pkey id
-	EXECUTE 'SELECT MIN(' || pkey || ') FROM ' || table_to_chunk || ';' INTO min_id;
-	--find maximum pkey id
-	EXECUTE 'SELECT MAX(' || pkey || ') FROM ' || table_to_chunk || ';' INTO max_id;
-	-- determine size of chunks based on min id, max id and number of chunks
-	-- note that the _+1_ below is necessary as all variables are INTEGER and the division rounds to the floor
-	EXECUTE 'SELECT (' || max_id || ' - ' || min_id || ' + 1) / ' || num_chunks || ' + 1;' INTO step_size;
+	EXECUTE 'SELECT COUNT(*) FROM ' || table_to_chunk || ';' INTO no_of_records;
+	-- note that the _+1_ below is necessary as the variables are INTEGER and the division rounds to the floor
+	EXECUTE 'SELECT ' || no_of_records || ' / ' || num_chunks || ' + 1;' INTO step_size;
 
-	i := 0;
-	FOR lbnd IN SELECT generate_series(min_id,  max_id, step_size) AS lbnd
-	LOOP
-		i := i + 1;
-		ubnd := lbnd + step_size;
+	FOR i IN 1..num_chunks LOOP
 		conn := 'conn_' || i;
-		RAISE NOTICE 'Chunk %: % >= % and % < %', i, pkey, lbnd, pkey, ubnd;
+		RAISE NOTICE 'Chunk %', i;
 		--create a new db connection
 		EXECUTE 'SELECT dblink_connect(' || QUOTE_LITERAL(conn) || ', ' || QUOTE_LITERAL('dbname=' || db) ||');';
 		-- create a subquery string that will replace the table name in the original query
 		IF table_to_chunk_alias = '' THEN
 			EXECUTE 'SELECT ''squery'' || ((10000*random())::integer::text);' INTO table_to_chunk_alias;
 		END IF;
-		part := '(SELECT * FROM ' || table_to_chunk || ' WHERE ' || pkey || ' >= ' || lbnd || ' AND ' || pkey || ' < ' || ubnd || ') AS ' || table_to_chunk_alias;
+		part := '(SELECT * FROM ' || table_to_chunk || ' LIMIT ' || step_size || ' OFFSET ' || ((i - 1) * step_size) || ') AS ' || table_to_chunk_alias;
 		--edit the input query using the subsquery string
 		EXECUTE
 			'SELECT REPLACE(' || QUOTE_LITERAL(query) || ',' || QUOTE_LITERAL(table_to_chunk) || ',' || QUOTE_LITERAL(part) || ')'
 			INTO subquery;
 		insert_query := 'INSERT INTO ' || output_table || ' ' || subquery || ';';
-		RAISE NOTICE '%', insert_query;
+		-- RAISE NOTICE '%', insert_query;
 		--send the query asynchronously using the dblink connection
 		EXECUTE
 			'SELECT dblink_send_query(' || QUOTE_LITERAL(conn) || ',' || QUOTE_LITERAL(insert_query) || ');'

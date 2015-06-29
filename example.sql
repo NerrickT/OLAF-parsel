@@ -5,8 +5,7 @@ CREATE TABLE temp_output (no_of_records INTEGER);
 SELECT parsel(
 	'olaf',
 	'ons_pd',
-	'id',
-	'select count(a.id) as no_of_records from ons_pd;',
+	'select count(a.pcd) as no_of_records from ons_pd;',
 	'temp_output',
 	'a',
 	2);
