@@ -52,7 +52,6 @@ BEGIN
 		--create a new db connection
 		EXECUTE 'SELECT dblink_connect(' || QUOTE_LITERAL(conn) || ', ' || QUOTE_LITERAL('dbname=' || db) ||');';
 		-- create a subquery string that will replace the table name in the original query
-		RAISE NOTICE 'I am here. %', table_to_chunk_alias;
 		IF table_to_chunk_alias = '' THEN
 			EXECUTE 'SELECT ''squery'' || ((10000*random())::integer::text);' INTO table_to_chunk_alias;
 		END IF;
