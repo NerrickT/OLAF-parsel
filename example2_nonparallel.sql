@@ -12,4 +12,5 @@ CREATE TABLE pcd_fix AS (
 			LIMIT 1) AS b
 );
 
--- This takes 2:30 on a MacBook Pro 15" (Mid-2015) 2.8 GHz Intel Core i7, 16Gb RAM
+-- This takes 2:30 to process a 10,000 records _ons_pd_short_ on a MacBook Pro 15" (Mid-2015) 2.8 GHz Intel Core i7,
+-- 16Gb RAM.

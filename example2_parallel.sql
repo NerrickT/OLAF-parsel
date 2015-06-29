@@ -22,4 +22,5 @@ SELECT parsel(
 	'',
 	3);
 
--- This, chunking into 3 parts, takes 1:15 on a MacBook Pro 15" (Mid-2015) 2.8 GHz Intel Core i7, 16Gb RAM
+-- This, chunking into 3 parts a 10,000 records _ons_pd_short_, takes 1:15 on a MacBook Pro 15" (Mid-2015) 2.8 GHz
+-- Intel Core i7, 16Gb RAM.
