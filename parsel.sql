@@ -85,6 +85,8 @@ BEGIN
 		IF num_done >= num_chunks THEN
 			EXIT;
 		END IF;
+		-- as suggested at https://gist.github.com/mjgleaso/8031067#comment-1372666
+		-- EXECUTE 'SELECT pg_sleep(1)';
 	END LOOP;
 	-- disconnect the dblinks
 	FOR i IN 1..num_chunks LOOP
