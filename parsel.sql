@@ -44,6 +44,8 @@ BEGIN
 		END IF;
 		part := '(SELECT * FROM ' || table_to_chunk || ' LIMIT ' || step_size || ' OFFSET ' || ((i - 1) * step_size) || ') AS ' || table_to_chunk_alias;
 		--edit the input query using the subsquery string
+		-- TODO: check the REPLACE statement below: what if the _table_to_chunk_ string is part of some other name
+		--       used in the query, too? It is likely I need to check for whole words instead.
 		EXECUTE
 			'SELECT REPLACE(' || QUOTE_LITERAL(query) || ',' || QUOTE_LITERAL(table_to_chunk) || ',' || QUOTE_LITERAL(part) || ')'
 			INTO subquery;
