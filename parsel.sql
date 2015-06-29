@@ -1,4 +1,4 @@
-DROP FUNCTION IF EXISTS parsel(db text, table_to_chunk text, pkey text, query text, output_table text, table_to_chunk_alias text, num_chunks integer);
+DROP FUNCTION IF EXISTS parsel(db TEXT, table_to_chunk TEXT, pkey TEXT, query TEXT, output_table TEXT, table_to_chunk_alias TEXT, num_chunks INTEGER);
 
 CREATE OR REPLACE FUNCTION parsel (
 		db                   TEXT,
@@ -34,21 +34,20 @@ DECLARE
 BEGIN
 
 	--find minimum pkey id
-	EXECUTE 'SELECT min(' || pkey || ') from ' || table_to_chunk || ';' INTO min_id;
+	EXECUTE 'SELECT MIN(' || pkey || ') FROM ' || table_to_chunk || ';' INTO min_id;
 	--find maximum pkey id
-	EXECUTE 'SELECT max(' || pkey || ') from ' || table_to_chunk || ';' INTO max_id;
+	EXECUTE 'SELECT MAX(' || pkey || ') FROM ' || table_to_chunk || ';' INTO max_id;
 	-- determine size of chunks based on min id, max id and number of chunks
-	EXECUTE 'SELECT (' || max_id || ' - ' || min_id || ') / ' || num_chunks || ';' INTO step_size;
+	-- note that the _+1_ below is necessary as all variables are INTEGER and the division rounds to the floor
+	EXECUTE 'SELECT (' || max_id || ' - ' || min_id || ' + 1) / ' || num_chunks || ' + 1;' INTO step_size;
 
-	-- loop through chunks
-	FOR lbnd, ubnd, i
-	IN SELECT generate_series(min_id,  max_id, step_size) AS lbnd,
-		      generate_series(min_id + step_size, max_id + step_size, step_size) AS ubnd,
-		      generate_series(1, num_chunks + 1) AS i
+	i := 0;
+	FOR lbnd IN SELECT generate_series(min_id,  max_id, step_size) AS lbnd
 	LOOP
-		--for debugging
-		RAISE NOTICE 'Chunk %: % >= % and % < %', i, pkey, lbnd, pkey, ubnd;
+		i := i + 1;
+		ubnd := lbnd + step_size;
 		conn := 'conn_' || i;
+		RAISE NOTICE 'Chunk %: % >= % and % < %', i, pkey, lbnd, pkey, ubnd;
 		--create a new db connection
 		EXECUTE 'SELECT dblink_connect(' || QUOTE_LITERAL(conn) || ', ' || QUOTE_LITERAL('dbname=' || db) ||');';
 		-- create a subquery string that will replace the table name in the original query
@@ -77,9 +76,10 @@ BEGIN
 	-- wait until all queries are finished
 	LOOP
 		num_done := 0;
-		FOR i IN 1..num_chunks + 1 LOOP
+		FOR i IN 1..num_chunks LOOP
+			conn := 'conn_' || i;
 			EXECUTE
-				'SELECT dblink_is_busy(' || QUOTE_LITERAL('conn_' || i) || ');'
+				'SELECT dblink_is_busy(' || QUOTE_LITERAL(conn) || ');'
 				INTO status;
 			IF status = 0 THEN
 				-- check for error messages
@@ -92,12 +92,12 @@ BEGIN
 				num_done := num_done + 1;
 			END IF;
 		END LOOP;
-		IF num_done >= num_chunks + 1 THEN
+		IF num_done >= num_chunks THEN
 			EXIT;
 		END IF;
 	END LOOP;
 	-- disconnect the dblinks
-	FOR i IN 1..num_chunks + 1 LOOP
+	FOR i IN 1..num_chunks LOOP
 		EXECUTE 'SELECT dblink_disconnect(' || QUOTE_LITERAL('conn_' || i) || ');';
 	END LOOP;
 	RETURN 'Success';
@@ -109,9 +109,9 @@ BEGIN
 			FOR n IN SELECT generate_series(1, i) AS n LOOP
 				EXECUTE 'SELECT dblink_disconnect(' || QUOTE_LITERAL('conn_' || n) || ');';
 			END LOOP;
-	EXCEPTION WHEN OTHERS THEN
-		RAISE NOTICE '% %', SQLERRM, SQLSTATE;
-	  END;
+			EXCEPTION WHEN OTHERS THEN
+				RAISE NOTICE '% %', SQLERRM, SQLSTATE;
+	  	END;
 
 END
 $BODY$
