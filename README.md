@@ -27,9 +27,7 @@ where:
 - ```number_of_chunks```: approximate number of processes to split the operation into.
 
 ##Contacts and acknowledgments
-OLAF-parsel is derived from the work of Mike Gleason at [https://gist.github.com/mjgleaso/8031067](https://gist.github.com/mjgleaso/8031067), last accessed on 29/06/2015. Read the description of the original function by its author on his blog [here](http://geeohspatial.blogspot.com/2013/12/a-simple-function-for-parallel-queries_18.html). I would not have thought of doing this if it wasn't for Mike, to whom I am very grateful. Note that, differently than the original function, this implementation is independent of referring to some key or another in the table being chunked.
-
-Feel free to contact me at [gc1a13@soton.ac.uk](gc1a13@soton.ac.uk) or [on Twitter](https://twitter.com/giacecco) if you are interested in finding out more.
+Find out more about the OLAF research project at [http://sociam-olaf.tumblr.com/](http://sociam-olaf.tumblr.com/). Feel free to contact me at [gc1a13@soton.ac.uk](gc1a13@soton.ac.uk) or [on Twitter](https://twitter.com/giacecco) if you want to know more.
 
 This work is supported under [SOCIAM: The Theory and Practice of Social Machines](http://sociam.org/). The SOCIAM Project is funded by [the UK Engineering and Physical Sciences Research Council (EPSRC)](https://www.epsrc.ac.uk/) under grant number EP/J017728/1 and comprises the Universities of [Southampton](http://www.southampton.ac.uk/), [Oxford](http://www.ox.ac.uk/) and [Edinburgh](http://www.ed.ac.uk/).
 

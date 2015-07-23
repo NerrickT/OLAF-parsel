@@ -2,7 +2,7 @@
    https://github.com/sociam/OLAF-import-ons_pd */
 
 DROP TABLE IF EXISTS ons_pd_short;
-CREATE TABLE ons_pd_short AS (SELECT * FROM ons_pd WHERE doterm IS NOT NULL LIMIT 10000);
+CREATE TABLE ons_pd_short AS (SELECT * FROM ons_pd WHERE doterm IS NOT NULL LIMIT 100000);
 CREATE INDEX ons_pd_short_idx_geom ON ons_pd_short USING GIST(geom);
 
 DROP TABLE IF EXISTS temp_active_postcodes;
